@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ currentPage }) => {
+  const { user, logout } = useAuth();
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '🏠', path: '/' },
     { id: 'repositories', label: 'Repositories', icon: '📦', path: '/repositories' },
@@ -14,11 +17,6 @@ const Sidebar = ({ currentPage }) => {
     { id: 'documentation', label: 'Documentation', icon: '📖', path: '/documentation' },
     { id: 'discussions', label: 'Discussions', icon: '💬', path: '/discussions' },
     { id: 'devops', label: 'DevOps & CI/CD', icon: '🚀', path: '/devops' },
-  ];
-
-  const projectHealth = [
-    { label: 'System Status', value: '98%', color: '#10b981' },
-    { label: 'All Systems Operational', value: '', color: '' },
   ];
 
   return (
@@ -42,6 +40,18 @@ const Sidebar = ({ currentPage }) => {
       </nav>
 
       <div className="sidebar-footer">
+        {user && (
+          <div className="sidebar-user">
+            <div className="sidebar-user-info">
+              <span className="sidebar-user-avatar">👤</span>
+              <div>
+                <p className="sidebar-user-name">{user.full_name}</p>
+                <p className="sidebar-user-role">{user.role}</p>
+              </div>
+            </div>
+            <button className="sidebar-logout-btn" onClick={logout}>Logout</button>
+          </div>
+        )}
         <div className="project-health">
           <h4>PROJECT HEALTH</h4>
           <div className="health-circle">

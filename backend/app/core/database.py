@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.core.config import settings
 
+
 # Replace 'postgresql://' with 'postgresql+psycopg://' for psycopg3 driver
 db_url = settings.DATABASE_URL
 if db_url.startswith("postgresql://"):

@@ -16,6 +16,7 @@ import CodeAnalysis from './pages/CodeAnalysis';
 import Documentation from './pages/Documentation';
 import Discussions from './pages/Discussions';
 import DevOps from './pages/DevOps';
+import CourseDetail from './pages/CourseDetail';
 
 const getPageKey = (pathname) => {
   const pageMap = {
@@ -68,6 +69,7 @@ function AppContent() {
                 <Route path="/documentation" element={<Documentation />} />
                 <Route path="/discussions" element={<Discussions />} />
                 <Route path="/devops" element={<DevOps />} />
+                <Route path="/courses/:courseId" element={<CourseDetail />} />
               </Routes>
             </MainLayout>
           </ProtectedRoute>

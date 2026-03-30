@@ -141,3 +141,17 @@ export const codeAnalysisAPI = {
   analyze: (repoId) =>
     apiFetch(`/code-analysis/${repoId}/analyze`, { method: 'POST' }),
 };
+
+// ---------- Courses & Lectures ----------
+export const courseAPI = {
+  list: (learningPathId) =>
+    apiFetch(`/courses${learningPathId ? `?learning_path_id=${learningPathId}` : ''}`),
+  get: (id) => apiFetch(`/courses/${id}`),
+  getProgress: (courseId) => apiFetch(`/courses/${courseId}/progress`),
+};
+
+export const lectureAPI = {
+  get: (id) => apiFetch(`/lectures/${id}`),
+  updateProgress: (id, data) =>
+    apiFetch(`/lectures/${id}/progress`, { method: 'PUT', body: JSON.stringify(data) }),
+};

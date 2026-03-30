@@ -5,6 +5,12 @@ from app.core.config import settings
 from app.core.database import engine, Base
 from app.api.router import api_router
 
+# Import all models so Base.metadata knows about them
+from app.models import *  # noqa: F401, F403
+from app.models.course import Course, Lecture, LectureProgress  # noqa: F401
+from app.api.endpoints.documentation import DocArticle  # noqa: F401
+from app.api.endpoints.devops import Pipeline  # noqa: F401
+
 # Create all tables (use Alembic in production)
 Base.metadata.create_all(bind=engine)
 

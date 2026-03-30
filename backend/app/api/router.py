@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api.endpoints import (
     auth, repositories, learning, dashboard, mentors,
-    discussions, documentation, devops, code_analysis,
+    discussions, documentation, devops, code_analysis, courses,
 )
 
 api_router = APIRouter(prefix="/api")
@@ -15,3 +15,4 @@ api_router.include_router(discussions.router)
 api_router.include_router(documentation.router)
 api_router.include_router(devops.router)
 api_router.include_router(code_analysis.router)
+api_router.include_router(courses.router)
