@@ -12,6 +12,8 @@ from app.models.user import User, UserRole, DevRole
 from app.models.repository import Repository
 from app.models.learning import Module, LearningPath, UserProgress, ModuleStatus, ProgressStatus
 from app.models.discussion import Discussion, DiscussionReply
+from app.api.endpoints.documentation import DocArticle
+from app.api.endpoints.devops import Pipeline
 
 
 def seed():
@@ -182,6 +184,29 @@ def seed():
         db.add_all(discussions)
         db.flush()
         print(f"Created {len(discussions)} discussions")
+
+        # ========== DOC ARTICLES ==========
+        doc_articles = [
+            DocArticle(title="Getting Started", category="Basics", content="# Getting Started\n\nWelcome to the Developer Onboarding Cloud platform. This guide will help you get up and running quickly.\n\n## Prerequisites\n- Node.js 16+\n- Python 3.10+\n- PostgreSQL\n\n## Quick Start\n1. Clone the repository\n2. Install dependencies\n3. Run the development server", views=2543, created_by_id=users[4].id),
+            DocArticle(title="API Reference", category="API", content="# API Reference\n\n## Authentication\nAll API endpoints require a JWT Bearer token.\n\n### POST /api/auth/login\nReturns an access token.\n\n### GET /api/auth/me\nReturns the current user profile.", views=1856, created_by_id=users[4].id),
+            DocArticle(title="Database Guide", category="Database", content="# Database Guide\n\n## Schema Overview\nThe platform uses PostgreSQL with the following main tables:\n- users\n- repositories\n- modules\n- learning_paths\n- user_progress", views=945, created_by_id=users[3].id),
+            DocArticle(title="Deployment Guide", category="DevOps", content="# Deployment Guide\n\n## Docker Setup\nUse the provided Dockerfile and docker-compose.yml.\n\n## AWS Deployment\n1. Set up EC2 instance\n2. Configure RDS PostgreSQL\n3. Deploy with Docker Compose", views=567, created_by_id=users[2].id),
+            DocArticle(title="Best Practices", category="Guidelines", content="# Best Practices\n\n## Code Style\n- Use meaningful variable names\n- Write unit tests\n- Follow PEP 8 for Python\n- Use ESLint for JavaScript\n\n## Git Workflow\n- Feature branches\n- Pull request reviews\n- Semantic commit messages", views=1234, created_by_id=users[4].id),
+        ]
+        db.add_all(doc_articles)
+        db.flush()
+        print(f"Created {len(doc_articles)} doc articles")
+
+        # ========== PIPELINES ==========
+        from datetime import datetime, timezone
+        pipelines = [
+            Pipeline(name="E-Commerce CI/CD", status="Active", success_rate=92, tools="GitHub Actions, Docker, Kubernetes", last_run=datetime(2026, 3, 19, 14, 32, tzinfo=timezone.utc), created_by_id=users[2].id),
+            Pipeline(name="API Deployment Pipeline", status="Active", success_rate=98, tools="Jenkins, Docker, AWS", last_run=datetime(2026, 3, 19, 10, 15, tzinfo=timezone.utc), created_by_id=users[2].id),
+            Pipeline(name="Billing Service Pipeline", status="Maintenance", success_rate=85, tools="GitLab CI, Docker", last_run=datetime(2026, 3, 18, 16, 45, tzinfo=timezone.utc), created_by_id=users[2].id),
+        ]
+        db.add_all(pipelines)
+        db.flush()
+        print(f"Created {len(pipelines)} pipelines")
 
         db.commit()
         print("\nSeed completed successfully!")

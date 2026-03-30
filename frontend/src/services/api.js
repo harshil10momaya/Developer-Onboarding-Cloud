@@ -14,10 +14,7 @@ async function apiFetch(endpoint, options = {}) {
     ...options.headers,
   };
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
 
   if (res.status === 401) {
     removeToken();
@@ -38,7 +35,6 @@ async function apiFetch(endpoint, options = {}) {
 export const authAPI = {
   register: (data) =>
     apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-
   login: async (email, password) => {
     const res = await apiFetch('/auth/login', {
       method: 'POST',
@@ -47,9 +43,7 @@ export const authAPI = {
     if (res.access_token) setToken(res.access_token);
     return res;
   },
-
   me: () => apiFetch('/auth/me'),
-
   logout: () => {
     removeToken();
     window.location.href = '/login';
@@ -101,4 +95,49 @@ export const progressAPI = {
 export const mentorAPI = {
   list: () => apiFetch('/mentors'),
   getDeveloperProgress: () => apiFetch('/mentors/developers'),
+};
+
+// ---------- Discussions ----------
+export const discussionAPI = {
+  list: (category) =>
+    apiFetch(`/discussions${category ? `?category=${category}` : ''}`),
+  get: (id) => apiFetch(`/discussions/${id}`),
+  create: (data) =>
+    apiFetch('/discussions', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) =>
+    apiFetch(`/discussions/${id}`, { method: 'DELETE' }),
+  listReplies: (id) => apiFetch(`/discussions/${id}/replies`),
+  createReply: (id, body) =>
+    apiFetch(`/discussions/${id}/replies`, { method: 'POST', body: JSON.stringify({ body }) }),
+};
+
+// ---------- Documentation ----------
+export const docsAPI = {
+  list: (category) =>
+    apiFetch(`/docs${category ? `?category=${category}` : ''}`),
+  get: (id) => apiFetch(`/docs/${id}`),
+  create: (data) =>
+    apiFetch('/docs', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) =>
+    apiFetch(`/docs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) =>
+    apiFetch(`/docs/${id}`, { method: 'DELETE' }),
+};
+
+// ---------- DevOps / Pipelines ----------
+export const pipelineAPI = {
+  list: () => apiFetch('/pipelines'),
+  create: (data) =>
+    apiFetch('/pipelines', { method: 'POST', body: JSON.stringify(data) }),
+  trigger: (id) =>
+    apiFetch(`/pipelines/${id}/run`, { method: 'PUT' }),
+  delete: (id) =>
+    apiFetch(`/pipelines/${id}`, { method: 'DELETE' }),
+};
+
+// ---------- Code Analysis ----------
+export const codeAnalysisAPI = {
+  list: () => apiFetch('/code-analysis'),
+  analyze: (repoId) =>
+    apiFetch(`/code-analysis/${repoId}/analyze`, { method: 'POST' }),
 };
