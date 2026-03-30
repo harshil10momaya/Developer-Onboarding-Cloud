@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { moduleAPI } from '../services/api';
 import '../styles/Pages.css';
 
 const Modules = () => {
-  const [modules] = useState([
-    { id: 1, name: 'Project Architecture', course: 'Backend Developer', status: 'Completed', date: '2026-03-15' },
-    { id: 2, name: 'Authentication Module', course: 'Backend Developer', status: 'In Progress', date: '2026-03-19' },
-    { id: 3, name: 'Database Models', course: 'Backend Developer', status: 'Upcoming', date: '2026-03-25' },
-    { id: 4, name: 'API Integration', course: 'Backend Developer', status: 'Upcoming', date: '2026-04-01' },
-    { id: 5, name: 'React Basics', course: 'Frontend Developer', status: 'Completed', date: '2026-03-10' },
-  ]);
+  const [modules, setModules] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    moduleAPI.list()
+      .then(setModules)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="page-container"><p>Loading...</p></div>;
 
   return (
     <div className="page-container">
@@ -21,14 +26,14 @@ const Modules = () => {
         {modules.map((module) => (
           <div key={module.id} className="module-item">
             <div className="module-header">
-              <h3>{module.name}</h3>
-              <span className={`status ${module.status.toLowerCase().replace(' ', '-')}`}>
+              <h3>{module.title}</h3>
+              <span className={`status ${module.status.toLowerCase()}`}>
                 {module.status}
               </span>
             </div>
             <div className="module-meta">
-              <span className="course-tag">{module.course}</span>
-              <span className="date">{new Date(module.date).toLocaleDateString()}</span>
+              <span className="course-tag">{module.description || 'No description'}</span>
+              <span className="date">{new Date(module.created_at).toLocaleDateString()}</span>
             </div>
           </div>
         ))}

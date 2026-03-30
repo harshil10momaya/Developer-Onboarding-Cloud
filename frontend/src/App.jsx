@@ -1,8 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 
 // Pages
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Repositories from './pages/Repositories';
 import LearningPaths from './pages/LearningPaths';
@@ -30,32 +33,56 @@ const getPageKey = (pathname) => {
   return pageMap[pathname] || 'dashboard';
 };
 
+// Protected route wrapper
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
+
 function AppContent() {
   const location = useLocation();
   const currentPage = getPageKey(location.pathname);
 
   return (
-    <MainLayout currentPage={currentPage}>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/repositories" element={<Repositories />} />
-        <Route path="/learning-paths" element={<LearningPaths />} />
-        <Route path="/modules" element={<Modules />} />
-        <Route path="/progress-tracker" element={<ProgressTracker />} />
-        <Route path="/mentor-support" element={<MentorSupport />} />
-        <Route path="/code-analysis" element={<CodeAnalysis />} />
-        <Route path="/documentation" element={<Documentation />} />
-        <Route path="/discussions" element={<Discussions />} />
-        <Route path="/devops" element={<DevOps />} />
-      </Routes>
-    </MainLayout>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Protected routes */}
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <MainLayout currentPage={currentPage}>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/repositories" element={<Repositories />} />
+                <Route path="/learning-paths" element={<LearningPaths />} />
+                <Route path="/modules" element={<Modules />} />
+                <Route path="/progress-tracker" element={<ProgressTracker />} />
+                <Route path="/mentor-support" element={<MentorSupport />} />
+                <Route path="/code-analysis" element={<CodeAnalysis />} />
+                <Route path="/documentation" element={<Documentation />} />
+                <Route path="/discussions" element={<Discussions />} />
+                <Route path="/devops" element={<DevOps />} />
+              </Routes>
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 
 function App() {
   return (
     <Router>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }
