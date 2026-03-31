@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # CORS
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Gemini AI
+    GEMINI_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True

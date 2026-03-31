@@ -1,146 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import { docsAPI } from '../services/api';
+import React from 'react';
 import '../styles/Pages.css';
 
-const DOC_CATEGORIES = ['Basics', 'API', 'Database', 'DevOps', 'Guidelines'];
+const DOC_LINKS = [
+  { title: 'FastAPI Documentation', category: 'Backend', url: 'https://fastapi.tiangolo.com/', description: 'Official FastAPI docs — endpoints, validation, async, deployment', icon: '⚡' },
+  { title: 'React Documentation', category: 'Frontend', url: 'https://react.dev/', description: 'Official React docs — components, hooks, patterns, API reference', icon: '⚛️' },
+  { title: 'PostgreSQL Documentation', category: 'Database', url: 'https://www.postgresql.org/docs/', description: 'PostgreSQL official docs — SQL, administration, optimization', icon: '🐘' },
+  { title: 'SQLAlchemy Documentation', category: 'Database', url: 'https://docs.sqlalchemy.org/', description: 'SQLAlchemy ORM docs — models, queries, relationships, migrations', icon: '🔗' },
+  { title: 'Docker Documentation', category: 'DevOps', url: 'https://docs.docker.com/', description: 'Docker docs — containers, images, Compose, networking', icon: '🐳' },
+  { title: 'Kubernetes Documentation', category: 'DevOps', url: 'https://kubernetes.io/docs/', description: 'Kubernetes docs — pods, deployments, services, config', icon: '☸️' },
+  { title: 'AWS Documentation', category: 'Cloud', url: 'https://docs.aws.amazon.com/', description: 'AWS docs — EC2, S3, RDS, IAM, Lambda, CloudWatch', icon: '☁️' },
+  { title: 'GitHub Actions', category: 'DevOps', url: 'https://docs.github.com/en/actions', description: 'GitHub Actions docs — CI/CD workflows, runners, secrets', icon: '🔄' },
+  { title: 'Pydantic Documentation', category: 'Backend', url: 'https://docs.pydantic.dev/', description: 'Pydantic docs — data validation, models, settings', icon: '✅' },
+  { title: 'Redis Documentation', category: 'Database', url: 'https://redis.io/docs/', description: 'Redis docs — caching, pub/sub, data structures', icon: '🔴' },
+  { title: 'Vite Documentation', category: 'Frontend', url: 'https://vite.dev/', description: 'Vite docs — dev server, build, plugins, config', icon: '⚡' },
+  { title: 'Prometheus & Grafana', category: 'Monitoring', url: 'https://prometheus.io/docs/', description: 'Monitoring stack — metrics, alerting, dashboards', icon: '📊' },
+];
+
+const CATEGORIES = [...new Set(DOC_LINKS.map((d) => d.category))];
 
 const Documentation = () => {
-  const [docs, setDocs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', category: 'Basics', content: '' });
-  const [selectedDoc, setSelectedDoc] = useState(null);
-  const [editing, setEditing] = useState(false);
-  const [error, setError] = useState('');
+  const [filter, setFilter] = React.useState('');
 
-  useEffect(() => {
-    docsAPI.list()
-      .then(setDocs)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    setError('');
-    try {
-      const newDoc = await docsAPI.create(form);
-      setDocs([newDoc, ...docs]);
-      setShowForm(false);
-      setForm({ title: '', category: 'Basics', content: '' });
-    } catch (err) { setError(err.message); }
-  };
-
-  const openDoc = async (doc) => {
-    try {
-      const fullDoc = await docsAPI.get(doc.id);
-      setSelectedDoc(fullDoc);
-      setEditing(false);
-    } catch (err) { console.error(err); }
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      const updated = await docsAPI.update(selectedDoc.id, {
-        title: selectedDoc.title,
-        category: selectedDoc.category,
-        content: selectedDoc.content,
-      });
-      setDocs(docs.map((d) => (d.id === updated.id ? updated : d)));
-      setSelectedDoc(updated);
-      setEditing(false);
-    } catch (err) { console.error(err); }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this document?')) return;
-    try {
-      await docsAPI.delete(id);
-      setDocs(docs.filter((d) => d.id !== id));
-      if (selectedDoc?.id === id) setSelectedDoc(null);
-    } catch (err) { console.error(err); }
-  };
-
-  if (loading) return <div className="page-container"><p>Loading...</p></div>;
+  const filtered = filter ? DOC_LINKS.filter((d) => d.category === filter) : DOC_LINKS;
 
   return (
     <div className="page-container">
       <div className="page-header">
         <h1>📖 Documentation</h1>
-        <p>Access complete documentation and guides</p>
-        <button className="action-btn" onClick={() => { setShowForm(!showForm); setSelectedDoc(null); }}>
-          {showForm ? 'Cancel' : '+ New Document'}
-        </button>
+        <p>Quick access to official documentation for all technologies in this project</p>
       </div>
 
-      {/* Create form */}
-      {showForm && (
-        <div className="form-card">
-          {error && <div className="form-error">{error}</div>}
-          <form onSubmit={handleCreate}>
-            <input type="text" placeholder="Document title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={{ padding: '10px 14px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9', fontSize: '14px' }}>
-              {DOC_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <textarea placeholder="Document content (Markdown supported)" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows="8" style={{ padding: '10px 14px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9', fontSize: '14px', resize: 'vertical', fontFamily: 'monospace' }} />
-            <button type="submit" className="action-btn">Create Document</button>
-          </form>
-        </div>
-      )}
-
-      {/* Document viewer */}
-      {selectedDoc && (
-        <div className="form-card" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-            <div>
-              {editing ? (
-                <input type="text" value={selectedDoc.title} onChange={(e) => setSelectedDoc({ ...selectedDoc, title: e.target.value })} style={{ padding: '8px 12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9', fontSize: '18px', fontWeight: '600', width: '100%' }} />
-              ) : (
-                <h2 style={{ color: '#f1f5f9', margin: '0 0 4px 0' }}>{selectedDoc.title}</h2>
-              )}
-              <p style={{ color: '#64748b', fontSize: '13px', margin: '4px 0 0 0' }}>
-                {selectedDoc.category} · 👁️ {selectedDoc.views} views · Updated {new Date(selectedDoc.updated_at).toLocaleDateString()}
-              </p>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {editing ? (
-                <button className="action-btn" onClick={handleUpdate}>Save</button>
-              ) : (
-                <button className="action-btn" onClick={() => setEditing(true)} style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Edit</button>
-              )}
-              <button onClick={() => setSelectedDoc(null)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
-            </div>
-          </div>
-          {editing ? (
-            <textarea value={selectedDoc.content || ''} onChange={(e) => setSelectedDoc({ ...selectedDoc, content: e.target.value })} rows="12" style={{ width: '100%', padding: '14px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9', fontSize: '14px', resize: 'vertical', fontFamily: 'monospace', boxSizing: 'border-box' }} />
-          ) : (
-            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', padding: '20px', color: '#cbd5e1', whiteSpace: 'pre-wrap', lineHeight: '1.7', fontSize: '14px' }}>
-              {selectedDoc.content || 'No content yet.'}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Document list */}
-      <div className="docs-list">
-        {docs.map((doc) => (
-          <div key={doc.id} className="doc-item">
-            <div className="doc-content" onClick={() => openDoc(doc)} style={{ cursor: 'pointer' }}>
-              <h3>{doc.title}</h3>
-              <div className="doc-meta">
-                <span className="category">{doc.category}</span>
-                <span className="views">👁️ {doc.views} views</span>
-                <span className="updated">Updated: {new Date(doc.updated_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button className="read-btn" onClick={() => openDoc(doc)}>Read →</button>
-              <button className="delete-btn" onClick={() => handleDelete(doc.id)}>🗑️</button>
-            </div>
-          </div>
+      <div className="filter-bar">
+        <button className={`filter-btn ${filter === '' ? 'active' : ''}`} onClick={() => setFilter('')}>All</button>
+        {CATEGORIES.map((cat) => (
+          <button key={cat} className={`filter-btn ${filter === cat ? 'active' : ''}`} onClick={() => setFilter(cat)}>{cat}</button>
         ))}
-        {docs.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>No documents yet. Create one!</p>}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+        {filtered.map((doc, i) => (
+          <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+            <div className="doc-link-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '28px' }}>{doc.icon}</span>
+                <div>
+                  <h3 style={{ color: '#f1f5f9', margin: 0, fontSize: '15px' }}>{doc.title}</h3>
+                  <span style={{ color: '#3b82f6', fontSize: '12px' }}>{doc.category}</span>
+                </div>
+              </div>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 8px 0' }}>{doc.description}</p>
+              <span style={{ color: '#3b82f6', fontSize: '13px' }}>Open docs →</span>
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   );
