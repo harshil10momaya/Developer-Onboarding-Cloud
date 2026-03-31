@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, ForeignKey, Boolean,
 )
+import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -58,3 +59,7 @@ class LectureProgress(Base):
 
     started_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        sa.UniqueConstraint('user_id', 'lecture_id', name='uq_user_lecture_progress'),
+    )

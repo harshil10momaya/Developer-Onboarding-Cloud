@@ -198,26 +198,46 @@ def update_lecture_progress(
     if not lecture:
         raise HTTPException(status_code=404, detail="Lecture not found")
 
+    # Find or create progress record
     prog = db.query(LectureProgress).filter(
         LectureProgress.user_id == current_user.id,
         LectureProgress.lecture_id == lecture_id,
     ).first()
+
+    now = datetime.now(timezone.utc)
 
     if not prog:
         prog = LectureProgress(
             user_id=current_user.id,
             lecture_id=lecture_id,
             course_id=lecture.course_id,
+            is_completed=payload.is_completed,
+            watched_seconds=payload.watched_seconds,
+            completed_at=now if payload.is_completed else None,
         )
         db.add(prog)
+    else:
+        prog.watched_seconds = max(prog.watched_seconds, payload.watched_seconds)
+        if payload.is_completed and not prog.is_completed:
+            prog.is_completed = True
+            prog.completed_at = now
 
-    prog.watched_seconds = max(prog.watched_seconds, payload.watched_seconds)
-    if payload.is_completed and not prog.is_completed:
-        prog.is_completed = True
-        prog.completed_at = datetime.now(timezone.utc)
+    try:
+        db.commit()
+        db.refresh(prog)
+    except Exception:
+        db.rollback()
+        # If unique constraint fails, fetch the existing one
+        prog = db.query(LectureProgress).filter(
+            LectureProgress.user_id == current_user.id,
+            LectureProgress.lecture_id == lecture_id,
+        ).first()
+        if prog and payload.is_completed and not prog.is_completed:
+            prog.is_completed = True
+            prog.completed_at = now
+            db.commit()
+            db.refresh(prog)
 
-    db.commit()
-    db.refresh(prog)
     return prog
 
 
