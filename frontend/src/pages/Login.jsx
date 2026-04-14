@@ -15,14 +15,9 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      await login(email, password);
-      navigate('/');
-    } catch (err) {
-      setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
+    try { await login(email, password); navigate('/'); }
+    catch (err) { setError(err.message || 'Login failed'); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -33,39 +28,13 @@ const Login = () => {
           <h1>Developer Onboarding Cloud</h1>
           <p>Sign in to your account</p>
         </div>
-
         {error && <div className="auth-error">{error}</div>}
-
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="arjun@example.com"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+          <div className="form-group"><label>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="arjun@example.com" required /></div>
+          <div className="form-group"><label>Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required /></div>
+          <button type="submit" className="auth-btn" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
-
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Register</Link>
-        </p>
-
+        <p className="auth-footer">Don't have an account? <Link to="/register">Register</Link></p>
         <div className="demo-credentials">
           <p><strong>Demo Accounts:</strong></p>
           <p>Developer: arjun@example.com / password123</p>

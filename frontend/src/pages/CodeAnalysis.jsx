@@ -21,8 +21,8 @@ const CodeAnalysis = () => {
     try {
       const result = await codeAnalysisAPI.analyze(repoId);
       setAnalyses((prev) => {
-        const existing = prev.findIndex((a) => a.repo_id === repoId);
-        if (existing >= 0) { const copy = [...prev]; copy[existing] = result; return copy; }
+        const idx = prev.findIndex((a) => a.repo_id === repoId);
+        if (idx >= 0) { const copy = [...prev]; copy[idx] = result; return copy; }
         return [result, ...prev];
       });
       setSelectedAnalysis(result);
@@ -50,7 +50,7 @@ const CodeAnalysis = () => {
     <div className="page-container">
       <div className="page-header">
         <h1>🔍 Code Analysis</h1>
-        <p>AI-powered code quality analysis using Google Gemini</p>
+        <p>AI-powered code quality analysis using Groq (LLaMA 3.3 70B)</p>
       </div>
 
       {unanalyzed.length > 0 && (
@@ -66,7 +66,6 @@ const CodeAnalysis = () => {
         </div>
       )}
 
-      {/* Detail panel */}
       {selectedAnalysis && (
         <div className="form-card" style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -74,8 +73,8 @@ const CodeAnalysis = () => {
               <h2 style={{ color: '#f1f5f9', margin: '0 0 4px 0' }}>{selectedAnalysis.repo_name}</h2>
               <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>
                 {(selectedAnalysis.tech_stack || []).join(' · ')} · Analyzed: {new Date(selectedAnalysis.analyzed_at).toLocaleString()}
-                <span style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '600', background: selectedAnalysis.analysis_method === 'gemini' ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)', color: selectedAnalysis.analysis_method === 'gemini' ? '#10b981' : '#f59e0b' }}>
-                  {selectedAnalysis.analysis_method === 'gemini' ? '🤖 Gemini AI' : '📊 Heuristic'}
+                <span style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '600', background: selectedAnalysis.analysis_method.includes('groq') ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)', color: selectedAnalysis.analysis_method.includes('groq') ? '#10b981' : '#f59e0b' }}>
+                  {selectedAnalysis.analysis_method.includes('groq') ? '🤖 Groq LLaMA 3.3' : '📊 Heuristic'}
                 </span>
               </p>
             </div>
@@ -111,10 +110,9 @@ const CodeAnalysis = () => {
         </div>
       )}
 
-      {/* Table */}
       <div className="analysis-table">
         <table>
-          <thead><tr><th>Repository</th><th>Quality</th><th>Issues</th><th>Security</th><th>Coverage</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Repository</th><th>Quality</th><th>Issues</th><th>Security</th><th>Coverage</th><th>Method</th><th>Actions</th></tr></thead>
           <tbody>
             {analyses.map((a) => (
               <tr key={a.id} onClick={() => setSelectedAnalysis(a)} style={{ cursor: 'pointer' }}>
@@ -123,10 +121,11 @@ const CodeAnalysis = () => {
                 <td><span className="badge warning">{a.issues_count}</span></td>
                 <td><span className="badge success">{a.security_score}%</span></td>
                 <td>{a.test_coverage}%</td>
+                <td><span style={{ fontSize: '11px', color: a.analysis_method.includes('groq') ? '#10b981' : '#f59e0b' }}>{a.analysis_method.includes('groq') ? '🤖 AI' : '📊 Heuristic'}</span></td>
                 <td><button className="action-btn" onClick={(e) => { e.stopPropagation(); handleAnalyze(a.repo_id); }} disabled={analyzing === a.repo_id} style={{ fontSize: '12px', padding: '4px 10px' }}>{analyzing === a.repo_id ? '...' : 'Re-analyze'}</button></td>
               </tr>
             ))}
-            {analyses.length === 0 && <tr><td colSpan="6" style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>No analyses yet. Analyze a repository above.</td></tr>}
+            {analyses.length === 0 && <tr><td colSpan="7" style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>No analyses yet.</td></tr>}
           </tbody>
         </table>
       </div>

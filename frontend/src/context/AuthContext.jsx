@@ -10,8 +10,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = getToken();
     if (token) {
-      authAPI
-        .me()
+      authAPI.me()
         .then((userData) => setUser(userData))
         .catch(() => setUser(null))
         .finally(() => setLoading(false));
@@ -28,16 +27,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (data) => {
-    const userData = await authAPI.register(data);
-    // Auto-login after register
+    await authAPI.register(data);
     await login(data.email, data.password);
-    return userData;
   };
 
-  const logout = () => {
-    setUser(null);
-    authAPI.logout();
-  };
+  const logout = () => { setUser(null); authAPI.logout(); };
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>

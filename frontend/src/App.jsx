@@ -34,10 +34,9 @@ const getPageKey = (pathname) => {
   return pageMap[pathname] || 'dashboard';
 };
 
-// Protected route wrapper
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#94a3b8', fontSize: '18px' }}>Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 }
@@ -48,11 +47,11 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public routes — NO layout */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protected routes */}
+      {/* Protected routes — WITH layout */}
       <Route
         path="/*"
         element={

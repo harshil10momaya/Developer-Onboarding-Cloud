@@ -1,57 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/Pages.css';
 
-const DOC_LINKS = [
-  { title: 'FastAPI Documentation', category: 'Backend', url: 'https://fastapi.tiangolo.com/', description: 'Official FastAPI docs — endpoints, validation, async, deployment', icon: '⚡' },
-  { title: 'React Documentation', category: 'Frontend', url: 'https://react.dev/', description: 'Official React docs — components, hooks, patterns, API reference', icon: '⚛️' },
-  { title: 'PostgreSQL Documentation', category: 'Database', url: 'https://www.postgresql.org/docs/', description: 'PostgreSQL official docs — SQL, administration, optimization', icon: '🐘' },
-  { title: 'SQLAlchemy Documentation', category: 'Database', url: 'https://docs.sqlalchemy.org/', description: 'SQLAlchemy ORM docs — models, queries, relationships, migrations', icon: '🔗' },
-  { title: 'Docker Documentation', category: 'DevOps', url: 'https://docs.docker.com/', description: 'Docker docs — containers, images, Compose, networking', icon: '🐳' },
-  { title: 'Kubernetes Documentation', category: 'DevOps', url: 'https://kubernetes.io/docs/', description: 'Kubernetes docs — pods, deployments, services, config', icon: '☸️' },
-  { title: 'AWS Documentation', category: 'Cloud', url: 'https://docs.aws.amazon.com/', description: 'AWS docs — EC2, S3, RDS, IAM, Lambda, CloudWatch', icon: '☁️' },
-  { title: 'GitHub Actions', category: 'DevOps', url: 'https://docs.github.com/en/actions', description: 'GitHub Actions docs — CI/CD workflows, runners, secrets', icon: '🔄' },
-  { title: 'Pydantic Documentation', category: 'Backend', url: 'https://docs.pydantic.dev/', description: 'Pydantic docs — data validation, models, settings', icon: '✅' },
-  { title: 'Redis Documentation', category: 'Database', url: 'https://redis.io/docs/', description: 'Redis docs — caching, pub/sub, data structures', icon: '🔴' },
-  { title: 'Vite Documentation', category: 'Frontend', url: 'https://vite.dev/', description: 'Vite docs — dev server, build, plugins, config', icon: '⚡' },
-  { title: 'Prometheus & Grafana', category: 'Monitoring', url: 'https://prometheus.io/docs/', description: 'Monitoring stack — metrics, alerting, dashboards', icon: '📊' },
-];
-
-const CATEGORIES = [...new Set(DOC_LINKS.map((d) => d.category))];
-
 const Documentation = () => {
-  const [filter, setFilter] = React.useState('');
-
-  const filtered = filter ? DOC_LINKS.filter((d) => d.category === filter) : DOC_LINKS;
+  const [docs] = useState([
+    { id: 1, title: 'Getting Started', category: 'Basics', views: 2543, lastUpdated: '2026-03-15' },
+    { id: 2, title: 'API Reference', category: 'API', views: 1856, lastUpdated: '2026-03-18' },
+    { id: 3, title: 'Database Guide', category: 'Database', views: 945, lastUpdated: '2026-03-10' },
+    { id: 4, title: 'Deployment Guide', category: 'DevOps', views: 567, lastUpdated: '2026-03-12' },
+    { id: 5, title: 'Best Practices', category: 'Guidelines', views: 1234, lastUpdated: '2026-03-19' },
+  ]);
 
   return (
     <div className="page-container">
       <div className="page-header">
         <h1>📖 Documentation</h1>
-        <p>Quick access to official documentation for all technologies in this project</p>
+        <p>Access complete documentation and guides</p>
       </div>
 
-      <div className="filter-bar">
-        <button className={`filter-btn ${filter === '' ? 'active' : ''}`} onClick={() => setFilter('')}>All</button>
-        {CATEGORIES.map((cat) => (
-          <button key={cat} className={`filter-btn ${filter === cat ? 'active' : ''}`} onClick={() => setFilter(cat)}>{cat}</button>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-        {filtered.map((doc, i) => (
-          <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-            <div className="doc-link-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px' }}>{doc.icon}</span>
-                <div>
-                  <h3 style={{ color: '#f1f5f9', margin: 0, fontSize: '15px' }}>{doc.title}</h3>
-                  <span style={{ color: '#3b82f6', fontSize: '12px' }}>{doc.category}</span>
-                </div>
+      <div className="docs-list">
+        {docs.map((doc) => (
+          <div key={doc.id} className="doc-item">
+            <div className="doc-content">
+              <h3>{doc.title}</h3>
+              <div className="doc-meta">
+                <span className="category">{doc.category}</span>
+                <span className="views">👁️ {doc.views} views</span>
+                <span className="updated">Updated: {new Date(doc.lastUpdated).toLocaleDateString()}</span>
               </div>
-              <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 8px 0' }}>{doc.description}</p>
-              <span style={{ color: '#3b82f6', fontSize: '13px' }}>Open docs →</span>
             </div>
-          </a>
+            <button className="read-btn">Read →</button>
+          </div>
         ))}
       </div>
     </div>

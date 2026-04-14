@@ -1,8 +1,8 @@
 """
-Code Analysis endpoint — uses Google Gemini AI to analyze repository metadata
-and generate quality metrics, issues, and recommendations.
+Code Analysis endpoint — uses Groq AI (LLaMA 3.3 70B) to analyze repository
+metadata and generate quality metrics, issues, and recommendations.
 
-Falls back to heuristic analysis if Gemini API key is not configured.
+Falls back to heuristic analysis if Groq API key is not configured.
 """
 from typing import List
 from datetime import datetime, timezone
@@ -40,7 +40,7 @@ class AnalysisResult(Base):
     security_score = Column(Float, default=0)
     details = Column(JSON, default=dict)
     ai_summary = Column(String(2000), nullable=True)
-    analysis_method = Column(String(50), default="heuristic")  # "gemini" or "heuristic"
+    analysis_method = Column(String(50), default="heuristic")
     analyzed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
@@ -65,35 +65,34 @@ class AnalysisOut(BaseModel):
         from_attributes = True
 
 
-# ---------- Gemini AI Analysis ----------
-def run_gemini_analysis(repo: Repository) -> dict:
-    """Use Google Gemini to analyze repository metadata and generate quality metrics."""
+# ---------- Groq AI Analysis ----------
+def run_groq_analysis(repo: Repository) -> Optional[dict]:
+    """Use Groq (LLaMA 3.3 70B) to analyze repository metadata."""
     try:
-        from google import genai
-        from google.genai import types
+        from groq import Groq
 
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        client = Groq(api_key=settings.GROQ_API_KEY)
 
         prompt = f"""You are a senior code quality analyst AI. Analyze this software repository and provide a detailed quality assessment.
 
 Repository: {repo.name}
 Description: {repo.description or 'No description'}
 Tech Stack: {json.dumps(repo.tech_stack or [])}
-Language Breakdown: {json.dumps(repo.language_breakdown or {})}
+Language Breakdown: {json.dumps(repo.language_breakdown or {{}})}
 URL: {repo.url}
 
 Respond ONLY with valid JSON (no markdown, no backticks, no explanation). Use this exact structure:
 {{
-    "quality_score": <float 0-100, overall code quality>,
-    "issues_count": <int, estimated number of code issues>,
-    "complexity_score": <float 0-100, cyclomatic complexity estimate>,
-    "maintainability": <float 0-100, maintainability index>,
-    "test_coverage": <float 0-100, estimated test coverage>,
-    "security_score": <float 0-100, security posture>,
+    "quality_score": <float 0-100>,
+    "issues_count": <int>,
+    "complexity_score": <float 0-100>,
+    "maintainability": <float 0-100>,
+    "test_coverage": <float 0-100>,
+    "security_score": <float 0-100>,
     "issues": [
-        {{"type": "<issue category>", "count": <int>, "severity": "<high|medium|low|info>", "description": "<brief description>"}}
+        {{"type": "<category>", "count": <int>, "severity": "<high|medium|low|info>", "description": "<brief>"}}
     ],
-    "recommendations": ["<actionable recommendation 1>", "<actionable recommendation 2>", ...],
+    "recommendations": ["<recommendation 1>", "<recommendation 2>"],
     "languages": {{
         "<language>": {{"percentage": <int>, "files_estimated": <int>, "lines_estimated": <int>}}
     }},
@@ -102,22 +101,23 @@ Respond ONLY with valid JSON (no markdown, no backticks, no explanation). Use th
         "total_lines_estimated": <int>,
         "dependencies_count": <int>
     }},
-    "ai_summary": "<2-3 sentence summary of the analysis findings and key concerns>"
+    "ai_summary": "<2-3 sentence summary>"
 }}
 
-Base your analysis on the tech stack and common patterns for projects using these technologies. Be realistic and specific."""
+Be realistic and specific based on the tech stack."""
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3,
-                max_output_tokens=1500,
-            ),
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a code quality analysis AI. Respond only with valid JSON."},
+                {"role": "user", "content": prompt},
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.3,
+            max_completion_tokens=1500,
         )
 
-        response_text = response.text.strip()
-        # Clean up potential markdown wrapping
+        response_text = chat_completion.choices[0].message.content.strip()
+        # Clean markdown wrapping if present
         if response_text.startswith("```"):
             response_text = response_text.split("\n", 1)[1]
         if response_text.endswith("```"):
@@ -140,17 +140,17 @@ Base your analysis on the tech stack and common patterns for projects using thes
                 "metrics": data.get("metrics", {}),
             },
             "ai_summary": data.get("ai_summary", ""),
-            "analysis_method": "gemini",
+            "analysis_method": "groq-llama3.3",
         }
 
     except Exception as e:
-        logger.warning(f"Gemini analysis failed for {repo.name}: {e}. Falling back to heuristic.")
+        logger.warning(f"Groq analysis failed for {repo.name}: {e}. Falling back to heuristic.")
         return None
 
 
 # ---------- Heuristic Fallback ----------
 def run_heuristic_analysis(repo: Repository) -> dict:
-    """Deterministic heuristic analysis as fallback when Gemini is unavailable."""
+    """Deterministic heuristic analysis as fallback."""
     seed = int(hashlib.md5(repo.name.encode()).hexdigest()[:8], 16)
     stack = [s.lower() for s in (repo.tech_stack or [])]
     lang_breakdown = repo.language_breakdown or {}
@@ -174,19 +174,17 @@ def run_heuristic_analysis(repo: Repository) -> dict:
         issue_types.append({"type": "Complexity", "count": issues_base // 3, "severity": "low", "description": "Deeply nested conditionals detected"})
     if security < 85:
         issue_types.append({"type": "Security", "count": max(1, issues_base // 5), "severity": "high", "description": "Potential dependency vulnerabilities"})
-    issue_types.append({"type": "Style", "count": max(1, issues_base // 4), "severity": "info", "description": "Inconsistent formatting and naming conventions"})
+    issue_types.append({"type": "Style", "count": max(1, issues_base // 4), "severity": "info", "description": "Inconsistent formatting"})
 
-    lang_analysis = {}
-    for lang, pct in lang_breakdown.items():
-        lang_analysis[lang] = {"percentage": pct, "files_estimated": max(5, pct * 2), "lines_estimated": pct * 150}
+    lang_analysis = {lang: {"percentage": pct, "files_estimated": max(5, pct * 2), "lines_estimated": pct * 150} for lang, pct in lang_breakdown.items()}
 
     recommendations = []
     if test_coverage < 60:
         recommendations.append("Increase test coverage — currently estimated below 60%")
     if complexity > 50:
-        recommendations.append("Refactor high-complexity modules to improve readability")
+        recommendations.append("Refactor high-complexity modules")
     if security < 80:
-        recommendations.append("Address security vulnerabilities in dependencies")
+        recommendations.append("Address dependency vulnerabilities")
     recommendations.append("Set up automated code quality checks in CI pipeline")
 
     return {
@@ -196,59 +194,44 @@ def run_heuristic_analysis(repo: Repository) -> dict:
         "maintainability": min(95, maintainability),
         "test_coverage": min(95, test_coverage),
         "security_score": min(98, security),
-        "details": {
-            "issues": issue_types,
-            "recommendations": recommendations,
-            "languages": lang_analysis,
-            "metrics": {
-                "total_files_estimated": sum(max(5, p * 2) for p in lang_breakdown.values()) if lang_breakdown else 50,
-                "total_lines_estimated": sum(p * 150 for p in lang_breakdown.values()) if lang_breakdown else 5000,
-                "dependencies_count": 15 + (seed % 30),
-            },
-        },
-        "ai_summary": f"Heuristic analysis of {repo.name}. Tech stack: {', '.join(repo.tech_stack or ['Unknown'])}. Estimated quality score: {min(98, base_quality)}%.",
+        "details": {"issues": issue_types, "recommendations": recommendations, "languages": lang_analysis,
+                    "metrics": {"total_files_estimated": sum(max(5, p * 2) for p in lang_breakdown.values()) if lang_breakdown else 50,
+                                "total_lines_estimated": sum(p * 150 for p in lang_breakdown.values()) if lang_breakdown else 5000,
+                                "dependencies_count": 15 + (seed % 30)}},
+        "ai_summary": f"Heuristic analysis of {repo.name}. Tech stack: {', '.join(repo.tech_stack or ['Unknown'])}.",
         "analysis_method": "heuristic",
     }
 
 
 # ---------- Endpoints ----------
 @router.get("/", response_model=List[AnalysisOut])
-def list_analyses(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+def list_analyses(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     results = db.query(AnalysisResult).order_by(AnalysisResult.analyzed_at.desc()).all()
     out = []
     for r in results:
         repo = db.query(Repository).filter(Repository.id == r.repo_id).first()
         out.append(AnalysisOut(
-            id=r.id, repo_id=r.repo_id,
-            repo_name=repo.name if repo else "Unknown",
-            tech_stack=repo.tech_stack if repo else [],
-            quality_score=r.quality_score, issues_count=r.issues_count,
-            complexity_score=r.complexity_score, maintainability=r.maintainability,
-            test_coverage=r.test_coverage, security_score=r.security_score,
-            details=r.details or {}, ai_summary=r.ai_summary,
-            analysis_method=r.analysis_method or "heuristic",
+            id=r.id, repo_id=r.repo_id, repo_name=repo.name if repo else "Unknown",
+            tech_stack=repo.tech_stack if repo else [], quality_score=r.quality_score,
+            issues_count=r.issues_count, complexity_score=r.complexity_score,
+            maintainability=r.maintainability, test_coverage=r.test_coverage,
+            security_score=r.security_score, details=r.details or {},
+            ai_summary=r.ai_summary, analysis_method=r.analysis_method or "heuristic",
             analyzed_at=r.analyzed_at,
         ))
     return out
 
 
 @router.post("/{repo_id}/analyze", response_model=AnalysisOut)
-def analyze_repository(
-    repo_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+def analyze_repository(repo_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     repo = db.query(Repository).filter(Repository.id == repo_id).first()
     if not repo:
         raise HTTPException(404, "Repository not found")
 
-    # Try Gemini first, fall back to heuristic
+    # Try Groq first, fall back to heuristic
     analysis_data = None
-    if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "your-gemini-api-key-here":
-        analysis_data = run_gemini_analysis(repo)
+    if settings.GROQ_API_KEY and not settings.GROQ_API_KEY.startswith("gsk_your"):
+        analysis_data = run_groq_analysis(repo)
 
     if analysis_data is None:
         analysis_data = run_heuristic_analysis(repo)
@@ -272,12 +255,11 @@ def analyze_repository(
     db.commit()
 
     return AnalysisOut(
-        id=result.id, repo_id=result.repo_id,
-        repo_name=repo.name, tech_stack=repo.tech_stack or [],
-        quality_score=result.quality_score, issues_count=result.issues_count,
-        complexity_score=result.complexity_score, maintainability=result.maintainability,
-        test_coverage=result.test_coverage, security_score=result.security_score,
-        details=result.details or {}, ai_summary=result.ai_summary,
-        analysis_method=result.analysis_method or "heuristic",
+        id=result.id, repo_id=result.repo_id, repo_name=repo.name,
+        tech_stack=repo.tech_stack or [], quality_score=result.quality_score,
+        issues_count=result.issues_count, complexity_score=result.complexity_score,
+        maintainability=result.maintainability, test_coverage=result.test_coverage,
+        security_score=result.security_score, details=result.details or {},
+        ai_summary=result.ai_summary, analysis_method=result.analysis_method or "heuristic",
         analyzed_at=result.analyzed_at,
     )

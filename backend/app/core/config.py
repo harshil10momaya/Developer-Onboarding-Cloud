@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -22,8 +21,8 @@ class Settings(BaseSettings):
     # CORS
     FRONTEND_URL: str = "http://localhost:5173"
 
-    # Gemini AI
-    GEMINI_API_KEY: str = ""
+    # Groq AI (get key from https://console.groq.com/keys)
+    GROQ_API_KEY: str = ""
 
     class Config:
         env_file = ".env"
