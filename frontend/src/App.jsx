@@ -17,6 +17,7 @@ import Documentation from './pages/Documentation';
 import Discussions from './pages/Discussions';
 import DevOps from './pages/DevOps';
 import CourseDetail from './pages/CourseDetail';
+import Admin from './pages/Admin';
 
 const getPageKey = (pathname) => {
   const pageMap = {
@@ -33,6 +34,13 @@ const getPageKey = (pathname) => {
   };
   return pageMap[pathname] || 'dashboard';
 };
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#94a3b8', fontSize: '18px' }}>Loading...</div>;
+  if (!user || user.role !== 'admin') return <Navigate to="/" replace />;
+  return children;
+}
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -69,6 +77,7 @@ function AppContent() {
                 <Route path="/discussions" element={<Discussions />} />
                 <Route path="/devops" element={<DevOps />} />
                 <Route path="/courses/:courseId" element={<CourseDetail />} />
+                <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
               </Routes>
             </MainLayout>
           </ProtectedRoute>

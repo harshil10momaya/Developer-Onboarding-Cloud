@@ -41,6 +41,8 @@ export const learningPathAPI = {
   list: () => apiFetch('/learning-paths'),
   get: (id) => apiFetch(`/learning-paths/${id}`),
   create: (data) => apiFetch('/learning-paths', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/learning-paths/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/learning-paths/${id}`, { method: 'DELETE' }),
 };
 
 export const progressAPI = {
@@ -51,11 +53,17 @@ export const progressAPI = {
 export const courseAPI = {
   list: (learningPathId) => apiFetch(`/courses${learningPathId ? `?learning_path_id=${learningPathId}` : ''}`),
   get: (id) => apiFetch(`/courses/${id}`),
+  create: (data) => apiFetch('/courses', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/courses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/courses/${id}`, { method: 'DELETE' }),
   getProgress: (courseId) => apiFetch(`/courses/${courseId}/progress`),
 };
 
 export const lectureAPI = {
   get: (id) => apiFetch(`/lectures/${id}`),
+  create: (data) => apiFetch('/lectures', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/lectures/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/lectures/${id}`, { method: 'DELETE' }),
   updateProgress: (id, data) => apiFetch(`/lectures/${id}/progress`, { method: 'PUT', body: JSON.stringify(data) }),
 };
 

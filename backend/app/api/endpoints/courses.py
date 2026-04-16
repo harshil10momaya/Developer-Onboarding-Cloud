@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.course import Course, Lecture, LectureProgress
+from app.schemas.learning import CourseCreate, CourseOut as CourseOutSchema, LectureCreate, LectureOutSchema
 
 router = APIRouter(tags=["Courses & Lectures"])
 
@@ -151,6 +152,58 @@ def get_course(
     )
 
 
+@router.post("/courses", response_model=CourseOutSchema, status_code=status.HTTP_201_CREATED)
+def create_course(
+    payload: CourseCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create courses")
+    course = Course(**payload.model_dump())
+    db.add(course)
+    db.commit()
+    db.refresh(course)
+    return course
+
+
+@router.put("/courses/{course_id}", response_model=CourseOutSchema)
+def update_course(
+    course_id: int,
+    payload: CourseCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can update courses")
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    for key, value in payload.model_dump().items():
+        setattr(course, key, value)
+    
+    db.commit()
+    db.refresh(course)
+    return course
+
+
+@router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_course(
+    course_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete courses")
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    db.delete(course)
+    db.commit()
+    return None
+
+
 # ---------- Lecture Endpoints ----------
 @router.get("/lectures/{lecture_id}", response_model=LectureOut)
 def get_lecture(
@@ -184,6 +237,58 @@ def get_lecture(
         course_id=lecture.course_id,
         is_completed=prog.is_completed,
     )
+
+
+@router.post("/lectures", response_model=LectureOutSchema, status_code=status.HTTP_201_CREATED)
+def create_lecture(
+    payload: LectureCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create lectures")
+    lecture = Lecture(**payload.model_dump())
+    db.add(lecture)
+    db.commit()
+    db.refresh(lecture)
+    return lecture
+
+
+@router.put("/lectures/{lecture_id}", response_model=LectureOutSchema)
+def update_lecture(
+    lecture_id: int,
+    payload: LectureCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can update lectures")
+    lecture = db.query(Lecture).filter(Lecture.id == lecture_id).first()
+    if not lecture:
+        raise HTTPException(status_code=404, detail="Lecture not found")
+    
+    for key, value in payload.model_dump().items():
+        setattr(lecture, key, value)
+    
+    db.commit()
+    db.refresh(lecture)
+    return lecture
+
+
+@router.delete("/lectures/{lecture_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_lecture(
+    lecture_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete lectures")
+    lecture = db.query(Lecture).filter(Lecture.id == lecture_id).first()
+    if not lecture:
+        raise HTTPException(status_code=404, detail="Lecture not found")
+    db.delete(lecture)
+    db.commit()
+    return None
 
 
 # ---------- Progress Endpoints ----------

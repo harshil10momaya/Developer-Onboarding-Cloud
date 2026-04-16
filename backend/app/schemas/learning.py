@@ -48,6 +48,54 @@ class LearningPathOut(BaseModel):
         from_attributes = True
 
 
+# ---------- Course ----------
+class CourseCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    learning_path_id: Optional[int] = None
+    order: int = 0
+    image_url: Optional[str] = None
+
+
+class CourseOut(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    learning_path_id: Optional[int] = None
+    order: int
+    image_url: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ---------- Lecture ----------
+class LectureCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    content: Optional[str] = None
+    youtube_id: Optional[str] = None
+    duration_minutes: int = 0
+    order: int = 0
+    course_id: int
+
+
+class LectureOutSchema(BaseModel):  # Named differently to avoid conflict with courses.py internal schema if any
+    id: int
+    title: str
+    description: Optional[str] = None
+    content: Optional[str] = None
+    youtube_id: Optional[str] = None
+    duration_minutes: int
+    order: int
+    course_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # ---------- Progress ----------
 class ProgressUpdate(BaseModel):
     status: str                           # not_started | in_progress | completed

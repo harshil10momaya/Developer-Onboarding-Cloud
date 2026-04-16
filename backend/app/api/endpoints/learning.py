@@ -36,11 +36,50 @@ def create_module(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create modules")
     module = Module(**payload.model_dump())
     db.add(module)
     db.commit()
     db.refresh(module)
     return module
+
+
+@router.put("/modules/{module_id}", response_model=ModuleOut)
+def update_module(
+    module_id: int,
+    payload: ModuleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can update modules")
+    module = db.query(Module).filter(Module.id == module_id).first()
+    if not module:
+        raise HTTPException(status_code=404, detail="Module not found")
+    
+    for key, value in payload.model_dump().items():
+        setattr(module, key, value)
+    
+    db.commit()
+    db.refresh(module)
+    return module
+
+
+@router.delete("/modules/{module_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_module(
+    module_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete modules")
+    module = db.query(Module).filter(Module.id == module_id).first()
+    if not module:
+        raise HTTPException(status_code=404, detail="Module not found")
+    db.delete(module)
+    db.commit()
+    return None
 
 
 @router.get("/modules/{module_id}", response_model=ModuleOut)
@@ -71,11 +110,50 @@ def create_learning_path(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create learning paths")
     path = LearningPath(**payload.model_dump())
     db.add(path)
     db.commit()
     db.refresh(path)
     return path
+
+
+@router.put("/learning-paths/{path_id}", response_model=LearningPathOut)
+def update_learning_path(
+    path_id: int,
+    payload: LearningPathCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can update learning paths")
+    path = db.query(LearningPath).filter(LearningPath.id == path_id).first()
+    if not path:
+        raise HTTPException(status_code=404, detail="Learning path not found")
+    
+    for key, value in payload.model_dump().items():
+        setattr(path, key, value)
+    
+    db.commit()
+    db.refresh(path)
+    return path
+
+
+@router.delete("/learning-paths/{path_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_learning_path(
+    path_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete learning paths")
+    path = db.query(LearningPath).filter(LearningPath.id == path_id).first()
+    if not path:
+        raise HTTPException(status_code=404, detail="Learning path not found")
+    db.delete(path)
+    db.commit()
+    return None
 
 
 @router.get("/learning-paths/{path_id}", response_model=LearningPathOut)

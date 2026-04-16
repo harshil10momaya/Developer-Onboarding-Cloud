@@ -20,6 +20,7 @@ const Sidebar = ({ currentPage }) => {
     { id: 'documentation', label: 'Documentation', icon: '📖', path: '/documentation', roles: ['developer','mentor','admin'] },
     { id: 'discussions', label: 'Discussions', icon: '💬', path: '/discussions', roles: ['developer','mentor','admin'] },
     { id: 'devops', label: 'DevOps & CI/CD', icon: '🚀', path: '/devops', roles: ['admin','mentor'] },
+    { id: 'admin', label: 'Admin Panel', icon: '⚙️', path: '/admin', roles: ['admin'] },
   ].filter((i) => i.roles.includes(role));
 
   return (
