@@ -11,8 +11,8 @@ const Repositories = () => {
   const [form, setForm] = useState({ name: '', url: '', description: '', tech_stack: '' });
   const [error, setError] = useState('');
   const [analyzing, setAnalyzing] = useState(null);
-  const canAdd = user?.role === 'developer' || user?.role === 'admin';
-  const canDelete = user?.role === 'admin';
+  const canAdd = user?.role === 'mentor' || user?.role === 'admin';
+  const canDelete = user?.role === 'mentor' || user?.role === 'admin';
 
   useEffect(() => { repoAPI.list().then(setRepos).catch(console.error).finally(() => setLoading(false)); }, []);
 

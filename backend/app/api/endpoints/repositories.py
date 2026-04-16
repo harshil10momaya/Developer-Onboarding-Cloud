@@ -28,6 +28,8 @@ def create_repository(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if current_user.role not in ("admin", "mentor"):
+        raise HTTPException(status_code=403, detail="Only admins and mentors can add repositories")
     repo = Repository(
         name=payload.name,
         url=payload.url,
@@ -60,6 +62,8 @@ def update_repository(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if current_user.role not in ("admin", "mentor"):
+        raise HTTPException(status_code=403, detail="Only admins and mentors can update repositories")
     repo = db.query(Repository).filter(Repository.id == repo_id).first()
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found")
@@ -78,6 +82,8 @@ def delete_repository(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if current_user.role not in ("admin", "mentor"):
+        raise HTTPException(status_code=403, detail="Only admins and mentors can delete repositories")
     repo = db.query(Repository).filter(Repository.id == repo_id).first()
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found")
