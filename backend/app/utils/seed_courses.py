@@ -13,7 +13,6 @@ from app.models.learning import LearningPath
 from app.api.endpoints.documentation import DocArticle
 from app.api.endpoints.devops import Pipeline
 
-
 def seed_courses():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()

@@ -11,6 +11,7 @@ from app.models.course import Course, Lecture, LectureProgress  # noqa: F401
 from app.models.mentor_session import MentorSession, Notification  # noqa: F401
 from app.api.endpoints.documentation import DocArticle  # noqa: F401
 from app.api.endpoints.devops import Pipeline  # noqa: F401
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Create all tables (use Alembic in production)
 Base.metadata.create_all(bind=engine)
@@ -26,7 +27,13 @@ app = FastAPI(
 # CORS — allow frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:5173"],
+    allow_origins=[
+        settings.FRONTEND_URL, 
+        "http://localhost", 
+        "http://127.0.0.1", 
+        "http://localhost:5173", 
+        "http://localhost:80"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,6 +41,9 @@ app.add_middleware(
 
 # Mount all API routes
 app.include_router(api_router)
+
+# Expose metrics
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/", tags=["Health"])

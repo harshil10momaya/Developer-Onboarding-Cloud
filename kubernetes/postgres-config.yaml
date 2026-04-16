@@ -1,0 +1,14 @@
+# This manifest is a template for the external RDS connection.
+# In a real scenario, you'd use AWS Secrets Manager or a K8s Secret.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: onboarding-cloud
+type: Opaque
+data:
+  # Base64 encoded values. Replace them with real ones.
+  # echo -n "postgresql://user:pass@host:5432/db" | base64
+  database-url: REPLACE_WITH_BASE64_DATABASE_URL
+  # echo -n "your-secret-key" | base64
+  secret-key: REPLACE_WITH_BASE64_SECRET_KEY
