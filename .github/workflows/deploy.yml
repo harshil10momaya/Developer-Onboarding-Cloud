@@ -1,0 +1,58 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        # Placeholder for real login: uses: docker/login-action@v3
+        run: echo "Logging into Registry..."
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false # Set to true when registry is configured
+          tags: coc-backend:latest
+
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false # Set to true when registry is configured
+          tags: coc-frontend:latest
+
+  deploy-to-kubernetes:
+    needs: build-and-push
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure K8s Context
+        # This step usually involves setting KUBECONFIG secrets
+        # For EKS: aws eks update-kubeconfig --name coc-cluster
+        run: echo "Configuring K8s Context..."
+
+      - name: Apply Manifests
+        run: |
+          kubectl apply -f kubernetes/backend-deployment.yaml
+          kubectl apply -f kubernetes/frontend-deployment.yaml
+          kubectl apply -f kubernetes/ingress.yaml
+          kubectl apply -f kubernetes/monitoring.yaml

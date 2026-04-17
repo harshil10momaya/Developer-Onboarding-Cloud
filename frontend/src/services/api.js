@@ -29,6 +29,8 @@ export const repoAPI = {
   create: (data) => apiFetch('/repositories', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => apiFetch(`/repositories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => apiFetch(`/repositories/${id}`, { method: 'DELETE' }),
+  listFiles: (id, path = '.') => apiFetch(`/repositories/${id}/files?path=${encodeURIComponent(path)}`),
+  getFileContent: (id, path) => apiFetch(`/repositories/${id}/files/content?path=${encodeURIComponent(path)}`),
 };
 
 export const moduleAPI = {

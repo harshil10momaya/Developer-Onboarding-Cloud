@@ -18,6 +18,7 @@ class RepositoryOut(BaseModel):
     tech_stack: list = []
     language_breakdown: dict = {}
     is_analyzed: bool
+    local_path: Optional[str] = None
     analysis_summary: Optional[str] = None
     architecture_overview: Optional[str] = None
     added_by_id: int
