@@ -10,7 +10,7 @@ data:
     scrape_configs:
       - job_name: 'fastapi-backend'
         static_configs:
-          - targets: ['backend-service:8000']
+          - targets: ['backend:8000']
 ---
 apiVersion: apps/v1
 kind: Deployment
