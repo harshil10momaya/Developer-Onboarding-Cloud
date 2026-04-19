@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = (import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '') + '/api';
 
 export const getToken = () => localStorage.getItem('access_token');
 export const setToken = (token) => localStorage.setItem('access_token', token);
